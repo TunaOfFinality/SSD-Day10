@@ -1,7 +1,7 @@
 import jwt from "jsonwebtoken"
 import userService from "../services/userService.js";
 
-const authMiddleware = () => {
+const authMiddleware = (requiredRole = undefined) => {
   return async (req, res, next) => {
     try {
       const jwt_secret = process.env.JWT_SECRET;
@@ -9,10 +9,15 @@ const authMiddleware = () => {
       const decodedToken = jwt.verify(tokenArray[1], jwt_secret);
       const user = await userService.getUserById(decodedToken.userId);
       if(user){
+        if(requiredRole && user.role !== requiredRole){
+          return res.status(403).json({
+            message: "Forbidden"
+          });
+        }
         req['user'] = decodedToken.userId;
         next();
       } else {
-        res.status(401).json({
+        res.status(40).json({
           message: "Unauthorized"
         });
       }
